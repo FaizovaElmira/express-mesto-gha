@@ -5,11 +5,11 @@ router.get('/', getUsers);
 
 router.get('/:id', getUserById);
 
-router.get('/', createUser);
+router.post('/', createUser);
 
-router.get('/:id', updateUserById);
+router.patch('/:id', updateUserById);
 
-router.get('/:id', deleteUserById);
+router.delete('/:id', deleteUserById);
 
 
 module.exports = router;

@@ -1,6 +1,17 @@
 [![Tests](../../actions/workflows/tests-13-sprint.yml/badge.svg)](../../actions/workflows/tests-13-sprint.yml) [![Tests](../../actions/workflows/tests-14-sprint.yml/badge.svg)](../../actions/workflows/tests-14-sprint.yml)
 # Проект Mesto фронтенд + бэкенд
 
+Учебный проект в Яндекс.Практикуме на Express.
+Является серверной частью проекта Mesto.
+Проект написан с использованием технологий:
+
+Node
+Express
+MongoDB
+Mongoose
+Postman
+
+[Ссылка на репозиторий](https://github.com/FaizovaElmira/express-mesto-gha)
 
 ## Директории
 

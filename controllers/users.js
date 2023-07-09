@@ -1,25 +1,42 @@
-// const User = require("../models/User");
-const usersData = require('../data.json');
+const User = require("../models/User");
 
 const getUsers = (req, res) => {
-  res.status(200).json(usersData);
+    return User.find({})
+        .then((users) => {
+            return res.status(200).send(users);
+        })
 };
 
 const getUserById = (req, res) => {
-  const userId = parseInt(req.params.id);
-  const user = usersData.find(user => user.id === userId);
+  const {id} = req.params;
 
-  if (!user) {
-    res.status(404).json({ error: 'User not found' });
-  } else {
-    res.status(200).json(user);
-  }
+  return User.findById(id)
+      .then((user) => {
+          if (!user) {
+              return res.status(404).send({message: "User not found"});
+          }
+          return res.status(200).send(user);
+      })
+      .catch((err) => {
+          return res.status(500).send({message: "Server Error"});
+      })
 };
 
 const createUser = (req, res) => {
-  const newUser = req.body; // Assuming the new user data is sent in the request body
-  console.log(newUser);
-  res.status(201).json(newUser);
+  const newUserData = req.body;
+
+  return User.create(newUserData)
+      .then((newUser) => {
+          return res.status(201).send(newUser);
+      })
+      .catch((err) => {
+          if (err.name === "ValidationError") {
+              return res.status(400).send({
+                  message: `${Object.values(err.errors).map((err) => err.message).join(", ")}`
+              });
+          }
+          return res.status(500).send({message: "Server Error"});
+      })
 };
 
 const updateUserById = (req, res) => {

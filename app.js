@@ -2,6 +2,7 @@ const express = require('express');
 const routes = require('./routes/index');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const path = require('path');
 
 const { PORT = 3000 } = process.env;
 
@@ -15,6 +16,8 @@ mongoose
 
 
 const app = express();
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(bodyParser.json());
 

@@ -1,54 +1,99 @@
 const User = require("../models/User");
 
-const getUsers = (req, res) => {
-    return User.find({})
-        .then((users) => {
-            return res.status(200).send(users);
-        })
+const getUsers = async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.status(200).send(users);
+  } catch (err) {
+    res.status(500).send({ message: "Server Error" });
+  }
 };
 
-const getUserById = (req, res) => {
-  const {id} = req.params;
+const getUserById = async (req, res) => {
+  const { userId } = req.params;
 
-  return User.findById(id)
-      .then((user) => {
-          if (!user) {
-              return res.status(404).send({message: "User not found"});
-          }
-          return res.status(200).send(user);
-      })
-      .catch((err) => {
-          return res.status(500).send({message: "Server Error"});
-      })
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).send({ message: "User not found" });
+    } else {
+      res.status(200).send(user);
+    }
+  } catch (err) {
+    res.status(500).send({ message: "Server Error" });
+  }
 };
 
-const createUser = (req, res) => {
+const createUser = async (req, res) => {
   const newUserData = req.body;
 
-  return User.create(newUserData)
-      .then((newUser) => {
-          return res.status(201).send(newUser);
-      })
-      .catch((err) => {
-          if (err.name === "ValidationError") {
-              return res.status(400).send({
-                  message: `${Object.values(err.errors).map((err) => err.message).join(", ")}`
-              });
-          }
-          return res.status(500).send({message: "Server Error"});
-      })
+  try {
+    const newUser = await User.create(newUserData);
+    res.status(201).send(newUser);
+  } catch (err) {
+    if (err.name === "ValidationError") {
+      const errorMessages = Object.values(err.errors).map((err) => err.message);
+      res.status(400).send({ message: errorMessages.join(", ") });
+    } else {
+      res.status(500).send({ message: "Server Error" });
+    }
+  }
 };
 
-const updateUserById = (req, res) => {
+const updateProfile = async (req, res) => {
+  const { name, about } = req.body;
+
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      { name, about },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json(updatedUser);
+  } catch (err) {
+    if (err.name === 'ValidationError') {
+      const errorMessages = Object.values(err.errors).map((err) => err.message);
+      res.status(400).json({ message: errorMessages.join(', ') });
+    } else {
+      res.status(500).json({ message: 'Server Error' });
+    }
+  }
 };
 
-const deleteUserById = (req, res) => {
+const updateAvatar = async (req, res) => {
+  const { avatar } = req.body;
+
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      { avatar },
+      { new: true, runValidators: true }
+    );
+    if (!updatedUser) {
+      res.status(404).send({ message: "User not found" });
+    } else {
+      res.status(200).send(updatedUser);
+    }
+  } catch (err) {
+    if (err.name === "ValidationError") {
+      const errorMessages = Object.values(err.errors).map((err) => err.message);
+      res.status(400).send({ message: errorMessages.join(", ") });
+    } else {
+      res.status(500).send({ message: "Server Error" });
+    }
+  }
 };
 
 module.exports = {
-    getUsers,
-    getUserById,
-    createUser,
-    updateUserById,
-    deleteUserById
-}
+  getUsers,
+  getUserById,
+  createUser,
+  updateProfile,
+  updateAvatar,
+};
+

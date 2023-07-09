@@ -2,7 +2,7 @@ const express = require('express');
 const routes = require('./routes/index');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const path = require('path');
+// const path = require('path');
 
 const { PORT = 3000 } = process.env;
 
@@ -17,7 +17,15 @@ mongoose
 
 const app = express();
 
-app.use(express.static(path.join(__dirname, 'public')));
+// app.use(express.static(path.join(__dirname, 'public')));
+
+app.use((req, res, next) => {
+  req.user = {
+    _id: '64a9acf46b9fa3b5787a4046'
+  };
+
+  next();
+});
 
 app.use(bodyParser.json());
 

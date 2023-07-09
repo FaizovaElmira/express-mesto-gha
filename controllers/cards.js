@@ -3,7 +3,7 @@ const Card = require('../models/card');
 const getAllCards = async (req, res) => {
   try {
     const cards = await Card.find();
-    res.json(cards);
+    res.status(200).json(cards);
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -11,10 +11,10 @@ const getAllCards = async (req, res) => {
 
 const createCard = async (req, res) => {
   const { name, link } = req.body;
-  const { _id: userId } = req.user;
+  const ownerId = req.user._id;
 
   try {
-    const card = await Card.create({ name, link, owner: userId });
+    const card = await Card.create({ name, link, owner: ownerId });
     res.status(201).json(card);
   } catch (error) {
     if (error.name === 'ValidationError') {
@@ -43,11 +43,15 @@ const deleteCard = async (req, res) => {
 
 const likeCard = async (req, res) => {
   try {
+    const { cardId } = req.params;
+    const ownerId = req.user._id;
+
     const card = await Card.findByIdAndUpdate(
-      req.params.cardId,
-      { $addToSet: { likes: req.user._id } },
+      cardId,
+      { $addToSet: { likes: ownerId } },
       { new: true },
     );
+
     if (!card) {
       res.status(404).json({ error: 'Card not found' });
     } else {

@@ -3,7 +3,7 @@ const userRoutes = require('./users');
 const cardRoutes = require('./cards');
 
 router.get('/', (req, res) => {
-  res.send('Hello World!')
+  res.send('Hello World!');
 });
 
 router.use('/users', userRoutes);

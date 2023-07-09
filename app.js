@@ -1,8 +1,8 @@
 const express = require('express');
-const routes = require('./routes/index');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 // const path = require('path');
+const routes = require('./routes');
 
 const { PORT = 3000 } = process.env;
 
@@ -11,9 +11,8 @@ mongoose
     useNewUrlParser: true,
   })
   .then(() => {
-    console.log('connected to db');
+    // console.log('connected to db');
   });
-
 
 const app = express();
 
@@ -21,7 +20,7 @@ const app = express();
 
 app.use((req, res, next) => {
   req.user = {
-    _id: '64a9acf46b9fa3b5787a4046'
+    _id: '64a9acf46b9fa3b5787a4046',
   };
 
   next();
@@ -32,5 +31,5 @@ app.use(bodyParser.json());
 app.use(routes);
 
 app.listen(PORT, () => {
-  console.log(`server is running on port ${PORT}`);
+  // console.log(`server is running on port ${PORT}`);
 });

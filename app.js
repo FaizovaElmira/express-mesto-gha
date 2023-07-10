@@ -28,6 +28,12 @@ app.use((req, res, next) => {
 
 app.use(bodyParser.json());
 
+// Middleware для установки заголовка Content-Type для всех ответов в формате JSON
+app.use((req, res, next) => {
+  res.setHeader('Content-Type', 'application/json');
+  next();
+});
+
 app.use(routes);
 
 app.listen(PORT, () => {

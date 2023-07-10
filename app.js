@@ -36,6 +36,11 @@ app.use((req, res, next) => {
 
 app.use(routes);
 
+// Обработчик для неправильного пути, возвращающий JSON-ответ с кодом 404
+app.use((req, res) => {
+  res.status(404).json({ message: 'Route not found' });
+});
+
 app.listen(PORT, () => {
   // console.log(`server is running on port ${PORT}`);
 });

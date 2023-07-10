@@ -3,24 +3,24 @@ const User = require('../models/user');
 const getUsers = async (req, res) => {
   try {
     const users = await User.find({});
-    res.status(200).json(users);
+    res.status(200).send(users);
   } catch (error) {
-    res.status(500).json({ message: 'Server Error', error });
+    res.status(500).send({ message: 'Server Error', error });
   }
 };
 
 const getUserById = async (req, res) => {
-  const ownerId = req.params.userId;
+  const { userId } = req.params;
 
   try {
-    const user = await User.findById(ownerId);
+    const user = await User.findById(userId);
     if (!user) {
-      res.status(404).json({ message: `User not found for id: ${ownerId}` });
+      res.status(404).send({ message: 'User not found' });
     } else {
-      res.status(200).json(user);
+      res.status(200).send(user);
     }
   } catch (error) {
-    res.status(500).json({ message: 'Server Error', error });
+    res.status(500).send({ message: 'Server Error' });
   }
 };
 
@@ -29,13 +29,13 @@ const createUser = async (req, res) => {
 
   try {
     const newUser = await User.create(newUserData);
-    res.status(200).json(newUser);
+    res.status(200).send(newUser);
   } catch (error) {
     if (error.name === 'ValidationError') {
       const errorMessages = Object.values(error.errors).map((err) => err.message);
-      res.status(400).json({ message: errorMessages.join(',') });
+      res.status(400).send({ message: errorMessages.join(',') });
     } else {
-      res.status(500).json({ message: 'Server Error', error });
+      res.status(500).send({ message: 'Server Error', error });
     }
   }
 };
@@ -52,16 +52,16 @@ const updateProfile = async (req, res) => {
     );
 
     if (!updatedUser) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).send({ message: 'User not found' });
     }
 
-    return res.status(200).json(updatedUser);
+    return res.status(200).send(updatedUser);
   } catch (error) {
     if (error.name === 'ValidationError') {
       const errorMessages = Object.values(error.errors).map((err) => err.message);
-      return res.status(400).json({ message: errorMessages.join(', ') });
+      return res.status(400).send({ message: errorMessages.join(', ') });
     }
-    return res.status(500).json({ message: 'Server Error', error });
+    return res.status(500).send({ message: 'Server Error', error });
   }
 };
 

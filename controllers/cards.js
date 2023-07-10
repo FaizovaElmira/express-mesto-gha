@@ -3,9 +3,9 @@ const Card = require('../models/card');
 const getAllCards = async (req, res) => {
   try {
     const cards = await Card.find();
-    res.status(200).json(cards);
+    res.status(200).send(cards);
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).send({ error: 'Internal server error' });
   }
 };
 
@@ -14,13 +14,22 @@ const createCard = async (req, res) => {
   const ownerId = req.user._id;
 
   try {
-    const card = await Card.create({ name, link, owner: ownerId });
-    res.status(201).json(card);
+    if (!name || !link) {
+      res.status(400).send({ message: 'Fields "name" and "link" must be filled' });
+    } else if (name.length < 2) {
+      res.status(400).send({ message: 'Field "name" should have a minimum length of 2 characters' });
+    } else if (name.length > 30) {
+      res.status(400).send({ message: 'Field "name" should have a maximum length of 30 characters' });
+    } else {
+      const card = await Card.create({ name, link, owner: ownerId });
+      res.status(201).send(card);
+    }
   } catch (error) {
     if (error.name === 'ValidationError') {
-      res.status(400).json({ error: 'Invalid data' });
+      const errorMessages = Object.values(error.errors).map((err) => err.message);
+      res.status(400).send({ message: errorMessages.join(', ') });
     } else {
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(500).send({ error: 'Internal server error' });
     }
   }
 };
@@ -31,13 +40,18 @@ const deleteCard = async (req, res) => {
 
   try {
     const card = await Card.findOneAndDelete({ _id: cardId, owner: userId });
+
     if (!card) {
-      res.status(404).json({ error: 'Card not found' });
+      res.status(404).send({ message: 'Card not found' });
     } else {
-      res.json(card);
+      res.status(200).send(card);
     }
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    if (error.name === 'CastError') {
+      res.status(400).send({ message: 'Invalid cardId' });
+    } else {
+      res.status(500).send({ message: 'Internal server error' });
+    }
   }
 };
 
@@ -46,19 +60,27 @@ const likeCard = async (req, res) => {
     const { cardId } = req.params;
     const ownerId = req.user._id;
 
-    const card = await Card.findByIdAndUpdate(
-      cardId,
-      { $addToSet: { likes: ownerId } },
-      { new: true },
-    );
+    try {
+      const card = await Card.findByIdAndUpdate(
+        cardId,
+        { $addToSet: { likes: ownerId } },
+        { new: true },
+      );
 
-    if (!card) {
-      res.status(404).json({ error: 'Card not found' });
-    } else {
-      res.json(card);
+      if (!card) {
+        res.status(404).send({ message: 'Card not found' });
+      } else {
+        res.status(200).send(card);
+      }
+    } catch (error) {
+      if (error.name === 'CastError') {
+        res.status(400).send({ message: 'Invalid cardId' });
+      } else {
+        res.status(500).send({ message: 'Internal server error' });
+      }
     }
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).send({ message: 'Internal server error' });
   }
 };
 
@@ -69,13 +91,18 @@ const dislikeCard = async (req, res) => {
       { $pull: { likes: req.user._id } },
       { new: true },
     );
+
     if (!card) {
-      res.status(404).json({ error: 'Card not found' });
+      res.status(404).send({ message: 'Card not found' });
     } else {
-      res.json(card);
+      res.status(200).send(card);
     }
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    if (error.name === 'CastError') {
+      res.status(400).send({ message: 'Invalid cardId' });
+    } else {
+      res.status(500).send({ message: 'Internal server error' });
+    }
   }
 };
 

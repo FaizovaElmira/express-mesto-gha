@@ -5,7 +5,7 @@ const getAllCards = async (req, res) => {
     const cards = await Card.find();
     res.status(200).send(cards);
   } catch (error) {
-    res.status(500).send({ error: 'Internal server error' });
+    res.status(500).send({ error: 'На сервере произошла ошибка' });
   }
 };
 
@@ -15,11 +15,11 @@ const createCard = async (req, res) => {
 
   try {
     if (!name || !link) {
-      res.status(400).send({ message: 'Fields "name" and "link" must be filled' });
+      res.status(400).send({ message: 'Переданы некорректные данные при создании карточки' });
     } else if (name.length < 2) {
-      res.status(400).send({ message: 'Field "name" should have a minimum length of 2 characters' });
+      res.status(400).send({ message: 'Поле «name» должно иметь длину не менее 2 символов' });
     } else if (name.length > 30) {
-      res.status(400).send({ message: 'Field "name" should have a maximum length of 30 characters' });
+      res.status(400).send({ message: 'Поле «name» должно иметь максимальную длину 30 символов' });
     } else {
       const card = await Card.create({ name, link, owner: ownerId });
       res.status(201).send(card);
@@ -29,7 +29,7 @@ const createCard = async (req, res) => {
       const errorMessages = Object.values(error.errors).map((err) => err.message);
       res.status(400).send({ message: errorMessages.join(', ') });
     } else {
-      res.status(500).send({ error: 'Internal server error' });
+      res.status(500).send({ error: 'На сервере произошла ошибка' });
     }
   }
 };
@@ -42,15 +42,15 @@ const deleteCard = async (req, res) => {
     const card = await Card.findOneAndDelete({ _id: cardId, owner: userId });
 
     if (!card) {
-      res.status(404).send({ message: 'Card not found' });
+      res.status(404).send({ message: 'Карточка с указанным _id не найдена.' });
     } else {
       res.status(200).send(card);
     }
   } catch (error) {
     if (error.name === 'CastError') {
-      res.status(400).send({ message: 'Invalid cardId' });
+      res.status(400).send({ message: 'Переданы некорректные данные для удаления карточки' });
     } else {
-      res.status(500).send({ message: 'Internal server error' });
+      res.status(500).send({ message: 'На сервере произошла ошибка' });
     }
   }
 };
@@ -68,19 +68,19 @@ const likeCard = async (req, res) => {
       );
 
       if (!card) {
-        res.status(404).send({ message: 'Card not found' });
+        res.status(404).send({ message: 'Передан несуществующий _id карточки' });
       } else {
         res.status(200).send(card);
       }
     } catch (error) {
       if (error.name === 'CastError') {
-        res.status(400).send({ message: 'Invalid cardId' });
+        res.status(400).send({ message: 'Переданы некорректные данные для постановки лайка' });
       } else {
-        res.status(500).send({ message: 'Internal server error' });
+        res.status(500).send({ message: 'На сервере произошла ошибка' });
       }
     }
   } catch (error) {
-    res.status(500).send({ message: 'Internal server error' });
+    res.status(500).send({ message: 'На сервере произошла ошибка' });
   }
 };
 
@@ -93,15 +93,15 @@ const dislikeCard = async (req, res) => {
     );
 
     if (!card) {
-      res.status(404).send({ message: 'Card not found' });
+      res.status(404).send({ message: 'Передан несуществующий _id карточки' });
     } else {
       res.status(200).send(card);
     }
   } catch (error) {
     if (error.name === 'CastError') {
-      res.status(400).send({ message: 'Invalid cardId' });
+      res.status(400).send({ message: 'Переданы некорректные данные для снятии лайка' });
     } else {
-      res.status(500).send({ message: 'Internal server error' });
+      res.status(500).send({ message: 'На сервере произошла ошибка' });
     }
   }
 };

@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
 const getUsers = async (req, res) => {
@@ -66,8 +67,7 @@ const updateProfile = async (req, res) => {
     return res.status(200).send(updatedUser);
   } catch (error) {
     if (error.name === 'ValidationError') {
-      const errorMessages = Object.values(error.errors).map((err) => err.message);
-      return res.status(400).send({ message: errorMessages.join(',') });
+      return res.status(400).send({ message: 'Некорректные данные' });
     }
     return res.status(500).send({ message: 'На сервере произошла ошибка', error });
   }
@@ -91,12 +91,33 @@ const updateAvatar = async (req, res) => {
     }
   } catch (error) {
     if (error.name === 'ValidationError') {
-      const errorMessages = Object.values(error.errors).map(() => error.message);
-      res.status(400).send({ message: errorMessages.join(',') });
+      res.status(400).send({ message: 'Некорректные данные' });
     } else {
-      res.status(500).send({ message: 'На сервере произошла ошибка' });
+      res.status(500).send({ message: 'На сервере произошла ошибка', error });
     }
   }
+};
+
+const login = (req, res) => {
+  const { email, password } = req.body;
+
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      // создадим токен
+      const token = jwt.sign(
+        { _id: user._id },
+        'some-secret-key',
+        { expiresIn: '7d' },
+      );
+
+      // вернём токен
+      res.send({ token });
+    })
+    .catch((err) => {
+      res
+        .status(401)
+        .send({ message: err.message });
+    });
 };
 
 module.exports = {
@@ -105,4 +126,5 @@ module.exports = {
   createUser,
   updateProfile,
   updateAvatar,
+  login,
 };

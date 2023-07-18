@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs');
 const User = require('../models/user');
 
 const getUsers = async (req, res) => {
@@ -25,15 +26,22 @@ const getUserById = async (req, res) => {
 };
 
 const createUser = async (req, res) => {
-  const newUserData = req.body;
-
   try {
-    const newUser = await User.create(newUserData);
+    const {
+      name, about, avatar, email, password,
+    } = req.body;
+    const hash = await bcrypt.hash(password, 10);
+    const newUser = await User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    });
     res.status(200).send(newUser);
   } catch (error) {
     if (error.name === 'ValidationError') {
-      const errorMessages = Object.values(error.errors).map((err) => err.message);
-      res.status(400).send({ message: errorMessages.join(',') });
+      res.status(400).send({ message: 'Некорректные данные' });
     } else {
       res.status(500).send({ message: 'На сервере произошла ошибка', error });
     }

@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const path = require('path');
 const routes = require('./routes');
+const auth = require('./middlewares/auth');
 
 const { PORT = 3000 } = process.env;
 
@@ -34,6 +35,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(auth);
 app.use(routes);
 
 // Обработчик для неправильного пути, возвращающий JSON-ответ с кодом 404

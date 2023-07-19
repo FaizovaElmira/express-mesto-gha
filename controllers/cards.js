@@ -26,10 +26,9 @@ const createCard = async (req, res) => {
     }
   } catch (error) {
     if (error.name === 'ValidationError') {
-      const errorMessages = Object.values(error.errors).map((err) => err.message);
-      res.status(400).send({ message: errorMessages.join(', ') });
+      res.status(400).send({ message: 'Некорректные данные' });
     } else {
-      res.status(500).send({ error: 'На сервере произошла ошибка' });
+      res.status(500).send({ message: 'На сервере произошла ошибка', error });
     }
   }
 };
@@ -39,19 +38,24 @@ const deleteCard = async (req, res) => {
   const { _id: userId } = req.user;
 
   try {
-    const card = await Card.findOneAndDelete({ _id: cardId, owner: userId });
+    const card = await Card.findOne({ _id: cardId, owner: userId });
 
     if (!card) {
-      res.status(404).send({ message: 'Карточка с указанным _id не найдена.' });
-    } else {
-      res.status(200).send(card);
+      return res.status(404).send({ message: 'Карточка с указанным _id не найдена или у вас нет прав для ее удаления.' });
     }
+
+    // Проверка, что текущий пользователь является владельцем карточки
+    if (card.owner.toString() !== userId.toString()) {
+      return res.status(403).send({ message: 'У вас нет прав для удаления карточки другого пользователя.' });
+    }
+
+    const deletedCard = await Card.findByIdAndDelete(cardId);
+    return res.status(200).send(deletedCard);
   } catch (error) {
     if (error.name === 'CastError') {
-      res.status(400).send({ message: 'Переданы некорректные данные для удаления карточки' });
-    } else {
-      res.status(500).send({ message: 'На сервере произошла ошибка' });
+      return res.status(400).send({ message: 'Переданы некорректные данные для удаления карточки' });
     }
+    return res.status(500).send({ message: 'На сервере произошла ошибка' });
   }
 };
 

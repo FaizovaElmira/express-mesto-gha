@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken');
 
 const authMiddleware = (req, res, next) => {
+  if (req.url.includes('/signin') || req.url.includes('/signup')) {
+    return next();
+  }
+
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer ')) {

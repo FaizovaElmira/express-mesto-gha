@@ -5,17 +5,18 @@ const {
   login,
   createUser,
 } = require('../controllers/users');
+const authMiddleware = require('../middlewares/auth');
 
 router.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
-router.use('/users', userRoutes);
-
-router.use('/cards', cardRoutes);
-
+// Публичные роуты
 router.post('/signin', login);
-
 router.post('/signup', createUser);
+
+// Роуты, которые требуют авторизации
+router.use('/users', authMiddleware, userRoutes);
+router.use('/cards', authMiddleware, cardRoutes);
 
 module.exports = router;

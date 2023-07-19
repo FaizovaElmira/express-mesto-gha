@@ -19,14 +19,6 @@ const app = express();
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '64a9acf46b9fa3b5787a4046',
-  };
-
-  next();
-});
-
 app.use(bodyParser.json());
 
 // Middleware для установки заголовка Content-Type для всех ответов в формате JSON

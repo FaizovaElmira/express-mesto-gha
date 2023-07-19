@@ -11,6 +11,24 @@ const getUsers = async (req, res) => {
   }
 };
 
+const getCurrentUser = async (req, res) => {
+  const ownerId = req.user;
+
+  try {
+    const userSpec = await User.findById(ownerId);
+    if (userSpec) {
+      res.status(200).send({ data: userSpec });
+    } else {
+      res.status(404).send({ message: `Пользователь по указанному ${ownerId} не найден` });
+    }
+  } catch (error) {
+    if (error.name === 'CastError') {
+      res.status(400).send({ message: `Невалидный id ${ownerId}` });
+    }
+    res.status(500).send({ message: 'На сервере произошла ошибка', error });
+  }
+};
+
 const getUserById = async (req, res) => {
   const { userId } = req.params;
 
@@ -122,6 +140,7 @@ const login = (req, res) => {
 
 module.exports = {
   getUsers,
+  getCurrentUser,
   getUserById,
   createUser,
   updateProfile,

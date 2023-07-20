@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const UnauthorizedError = require('../errors/UnauthorizedError');
 
 const authMiddleware = (req, res, next) => {
   if (req.url.includes('/signin') || req.url.includes('/signup')) {
@@ -8,7 +9,7 @@ const authMiddleware = (req, res, next) => {
   const { authorization } = req.headers;
 
   if (!authorization || !authorization.startsWith('Bearer ')) {
-    return res.status(401).send({ message: 'Необходима авторизация' });
+    throw new UnauthorizedError('Необходима авторизация');
   }
 
   const token = authorization.replace('Bearer ', '');
@@ -19,7 +20,7 @@ const authMiddleware = (req, res, next) => {
     next(); // пропускаем запрос дальше
     return null; // явный возврат значения в конце функции
   } catch (err) {
-    return res.status(401).send({ message: 'Необходима авторизация' });
+    throw new UnauthorizedError('Необходима авторизация');
   }
 };
 

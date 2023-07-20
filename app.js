@@ -2,7 +2,9 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const path = require('path');
-const { errors } = require('celebrate'); // Import celebrate errors
+const { errors } = require('celebrate');
+const handleErrors = require('./errors/handleErrors');
+const NotFoundError = require('./errors/NotFoundError');
 const routes = require('./routes');
 const auth = require('./middlewares/auth');
 
@@ -13,7 +15,7 @@ mongoose
     useNewUrlParser: true,
   })
   .then(() => {
-    // console.log('connected to db');
+    console.log('connected to MongoDB');
   });
 
 const app = express();
@@ -32,18 +34,13 @@ app.use(auth);
 app.use(routes);
 
 // Обработчик для неправильного пути, возвращающий JSON-ответ с кодом 404
-app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+app.use((req, res, next) => {
+  next(new NotFoundError('Страница по указанному маршруту не найдена'));
 });
 
 app.use(errors());
-
-// Error handler for other errors
-app.use((err, req, res) => {
-  console.error(err);
-  res.status(500).json({ error: 'Internal Server Error' });
-});
+app.use(handleErrors);
 
 app.listen(PORT, () => {
-  // console.log(`server is running on port ${PORT}`);
+  console.log(`server is running on port ${PORT}`);
 });

@@ -1,50 +1,55 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const NotFoundError = require('../errors/NotFoundError');
+const BadRequestError = require('../errors/BadRequestError');
+const UnauthorizedError = require('../errors/UnauthorizedError');
+const ConflictError = require('../errors/ConflictError');
 const User = require('../models/user');
 
-const getUsers = async (req, res) => {
+const getUsers = async (req, res, next) => {
   try {
     const users = await User.find({});
     res.status(200).send(users);
   } catch (error) {
-    res.status(500).send({ message: 'На сервере произошла ошибка', error });
+    next(error);
   }
 };
 
-const getCurrentUser = async (req, res) => {
+const getCurrentUser = async (req, res, next) => {
   const ownerId = req.user;
 
   try {
-    const userSpec = await User.findById(ownerId);
-    if (userSpec) {
-      res.status(200).send({ data: userSpec });
+    const userAdmin = await User.findById(ownerId);
+    if (userAdmin) {
+      res.status(200).send({ data: userAdmin });
     } else {
-      res.status(404).send({ message: `Пользователь по указанному ${ownerId} не найден` });
+      throw new NotFoundError(`Пользователь по указанному ${ownerId} не найден`);
     }
   } catch (error) {
     if (error.name === 'CastError') {
-      res.status(400).send({ message: `Невалидный id ${ownerId}` });
+      next(new BadRequestError(`Невалидный id ${ownerId}`));
+    } else {
+      next(error);
     }
-    res.status(500).send({ message: 'На сервере произошла ошибка', error });
   }
 };
 
-const getUserById = async (req, res) => {
+const getUserById = async (req, res, next) => {
   const { userId } = req.params;
 
   try {
     const user = await User.findById(userId);
     if (!user) {
-      res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
+      throw new NotFoundError('Пользователь по указанному _id не найден');
     } else {
       res.status(200).send(user);
     }
   } catch (error) {
-    res.status(400).send({ message: 'Переданы некорректные данные' });
+    next(new NotFoundError('Передан несуществующий в БД userId'));
   }
 };
 
-const createUser = async (req, res) => {
+const createUser = async (req, res, next) => {
   try {
     const {
       name, about, avatar, email, password,
@@ -57,17 +62,27 @@ const createUser = async (req, res) => {
       email,
       password: hash,
     });
-    res.status(200).send(newUser);
+
+    const { _id } = newUser;
+    res.status(200).send({
+      _id,
+      name,
+      about,
+      avatar,
+      email,
+    });
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      res.status(400).send({ message: 'Некорректные данные' });
+    if (error.code === 11000) {
+      next(new ConflictError('Этот email уже занят'));
+    } else if (error.name === 'ValidationError') {
+      next(new BadRequestError('Некорректные данные'));
     } else {
-      res.status(500).send({ message: 'На сервере произошла ошибка', error });
+      next(error);
     }
   }
 };
 
-const updateProfile = async (req, res) => {
+const updateProfile = async (req, res, next) => {
   const { name, about } = req.body;
   const ownerId = req.user._id;
 
@@ -79,19 +94,20 @@ const updateProfile = async (req, res) => {
     );
 
     if (!updatedUser) {
-      return res.status(404).send({ message: 'Пользователь с указанным _id не найден' });
+      throw new NotFoundError('Пользователь с указанным _id не найден');
     }
 
-    return res.status(200).send(updatedUser);
+    res.status(200).send(updatedUser);
   } catch (error) {
     if (error.name === 'ValidationError') {
-      return res.status(400).send({ message: 'Некорректные данные' });
+      next(new BadRequestError('Некорректные данные'));
+    } else {
+      next(error);
     }
-    return res.status(500).send({ message: 'На сервере произошла ошибка', error });
   }
 };
 
-const updateAvatar = async (req, res) => {
+const updateAvatar = async (req, res, next) => {
   const { avatar } = req.body;
   const ownerId = req.user._id;
 
@@ -103,20 +119,20 @@ const updateAvatar = async (req, res) => {
     );
 
     if (!updatedUser) {
-      res.status(404).send({ message: 'Пользователь с указанным _id не найден' });
-    } else {
-      res.status(200).send(updatedUser);
+      throw new NotFoundError('Пользователь с указанным _id не найден');
     }
+
+    res.status(200).send(updatedUser);
   } catch (error) {
     if (error.name === 'ValidationError') {
-      res.status(400).send({ message: 'Некорректные данные' });
+      next(new BadRequestError('Некорректные данные'));
     } else {
-      res.status(500).send({ message: 'На сервере произошла ошибка', error });
+      next(error);
     }
   }
 };
 
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
@@ -132,9 +148,7 @@ const login = (req, res) => {
       res.send({ token });
     })
     .catch((err) => {
-      res
-        .status(401)
-        .send({ message: err.message });
+      next(new UnauthorizedError(err.message));
     });
 };
 

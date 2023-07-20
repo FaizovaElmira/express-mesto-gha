@@ -1,3 +1,4 @@
+const { PORT = 3000, DB_URL = 'mongodb://127.0.0.1:27017/mestodb' } = process.env;
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
@@ -8,10 +9,8 @@ const NotFoundError = require('./errors/NotFoundError');
 const routes = require('./routes');
 const auth = require('./middlewares/auth');
 
-const { PORT = 3000 } = process.env;
-
 mongoose
-  .connect('mongodb://127.0.0.1:27017/mestodb', {
+  .connect(DB_URL, {
     useNewUrlParser: true,
   })
   .then(() => {

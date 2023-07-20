@@ -1,5 +1,6 @@
 const { PORT = 3000, DB_URL = 'mongodb://127.0.0.1:27017/mestodb' } = process.env;
 const express = require('express');
+const helmet = require('helmet');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const path = require('path');
@@ -18,6 +19,8 @@ mongoose
   });
 
 const app = express();
+
+app.use(helmet()); // Добавляем Helmet middleware
 
 app.use(express.static(path.join(__dirname, 'public')));
 

@@ -17,22 +17,10 @@ const createCard = async (req, res, next) => {
   const ownerId = req.user._id;
 
   try {
-    if (!name || !link) {
-      throw new BadRequestError('Переданы некорректные данные при создании карточки');
-    } else if (name.length < 2) {
-      throw new BadRequestError('Поле «name» должно иметь длину не менее 2 символов');
-    } else if (name.length > 30) {
-      throw new BadRequestError('Поле «name» должно иметь максимальную длину 30 символов');
-    } else {
-      const card = await Card.create({ name, link, owner: ownerId });
-      res.status(201).send(card);
-    }
+    const card = await Card.create({ name, link, owner: ownerId });
+    res.status(201).send(card);
   } catch (error) {
-    if (error instanceof BadRequestError) {
-      res.status(400).send({ message: 'Переданы некорректные данные при создании карточки.' });
-    } else {
-      next(error);
-    }
+    next(error);
   }
 };
 

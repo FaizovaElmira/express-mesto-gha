@@ -41,16 +41,18 @@ const deleteCard = async (req, res) => {
     const card = await Card.findOne({ _id: cardId, owner: userId });
 
     if (!card) {
-      return res.status(404).send({ message: 'Карточка с указанным _id не найдена или у вас нет прав для ее удаления.' });
+      return res.status(404).send({ message: 'Карточка с указанным _id не найдена.' });
     }
 
-    // Проверка, что текущий пользователь является владельцем карточки
-    if (card.owner.toString() !== userId.toString()) {
-      return res.status(403).send({ message: 'У вас нет прав для удаления карточки другого пользователя.' });
+    // Check if the card's owner matches the current user
+    if (!card.owner.equals(userId)) {
+      return res.status(403).send({ message: 'Вы не можете удалять карточки других пользователей.' });
     }
 
-    const deletedCard = await Card.findByIdAndDelete(cardId);
-    return res.status(200).send(deletedCard);
+    // Proceed to delete the card if it belongs to the user
+    await Card.findByIdAndDelete(cardId);
+
+    return res.status(200).send({ message: 'Карточка удалена' });
   } catch (error) {
     if (error.name === 'CastError') {
       return res.status(400).send({ message: 'Переданы некорректные данные для удаления карточки' });

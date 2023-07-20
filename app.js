@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const path = require('path');
+const { errors } = require('celebrate'); // Import celebrate errors
 const routes = require('./routes');
 const auth = require('./middlewares/auth');
 
@@ -33,6 +34,14 @@ app.use(routes);
 // Обработчик для неправильного пути, возвращающий JSON-ответ с кодом 404
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
+});
+
+app.use(errors());
+
+// Error handler for other errors
+app.use((err, req, res) => {
+  console.error(err);
+  res.status(500).json({ error: 'Internal Server Error' });
 });
 
 app.listen(PORT, () => {

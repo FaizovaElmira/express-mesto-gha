@@ -1,6 +1,7 @@
 const { PORT = 3000, DB_URL = 'mongodb://127.0.0.1:27017/mestodb' } = process.env;
 const express = require('express');
 const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const path = require('path');
@@ -20,7 +21,15 @@ mongoose
 
 const app = express();
 
+// Защитные middleware
+
 app.use(helmet()); // Добавляем Helmet middleware
+
+const limiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 минут
+  max: 100, // максимальное количество запросов
+});
+app.use(limiter); // Добавляем ограничитель запросов
 
 app.use(express.static(path.join(__dirname, 'public')));
 

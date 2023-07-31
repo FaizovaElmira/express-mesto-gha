@@ -1,10 +1,10 @@
 const { PORT = 3000, DB_URL = 'mongodb://127.0.0.1:27017/mestodb' } = process.env;
+const path = require('path');
 const express = require('express');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const path = require('path');
 const { errors } = require('celebrate');
 const handleErrors = require('./errors/handleErrors');
 const NotFoundError = require('./errors/NotFoundError');

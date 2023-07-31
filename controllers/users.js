@@ -9,53 +9,59 @@ const User = require('../models/user');
 const getUsers = async (req, res, next) => {
   try {
     const users = await User.find({});
-    res.status(200).send(users);
+    res.send({ data: users });
   } catch (error) {
     next(error);
   }
 };
 
 const getCurrentUser = async (req, res, next) => {
-  const ownerId = req.user;
-
   try {
-    const userAdmin = await User.findById(ownerId);
-    if (userAdmin) {
-      res.status(200).send({ data: userAdmin });
-    } else {
-      throw new NotFoundError(`Пользователь по указанному ${ownerId} не найден`);
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      throw new NotFoundError('Пользователя не существует');
     }
+
+    res.send({ data: user });
   } catch (error) {
-    if (error.name === 'CastError') {
-      next(new BadRequestError(`Невалидный id ${ownerId}`));
-    } else {
-      next(error);
-    }
+    next(error);
   }
 };
 
 const getUserById = async (req, res, next) => {
-  const { userId } = req.params;
-
   try {
+    const { userId } = req.params;
     const user = await User.findById(userId);
+
     if (!user) {
-      throw new NotFoundError('Пользователь по указанному _id не найден');
-    } else {
-      res.status(200).send(user);
+      throw new NotFoundError('Пользователя не существует');
     }
+
+    res.send({ data: user });
   } catch (error) {
-    next(new NotFoundError('Передан несуществующий в БД userId'));
+    next(error);
   }
 };
 
 const createUser = async (req, res, next) => {
   try {
     const {
-      name, about, avatar, email, password,
+      name,
+      about,
+      avatar,
+      email,
+      password,
     } = req.body;
+
+    const newUser = await User.findOne({ email });
+    if (newUser) {
+      throw new ConflictError('Этот email уже занят');
+    }
+
     const hash = await bcrypt.hash(password, 10);
-    const newUser = await User.create({
+    const user = await User.create({
       name,
       about,
       avatar,
@@ -63,19 +69,16 @@ const createUser = async (req, res, next) => {
       password: hash,
     });
 
-    const { _id } = newUser;
     res.status(200).send({
-      _id,
-      name,
-      about,
-      avatar,
-      email,
+      _id: user._id,
+      name: user.name,
+      about: user.about,
+      avatar: user.avatar,
+      email: user.email,
     });
   } catch (error) {
-    if (error.code === 11000) {
-      next(new ConflictError('Этот email уже занят'));
-    } else if (error.name === 'ValidationError') {
-      next(new BadRequestError('Некорректные данные'));
+    if (error.name === 'ValidationError') {
+      next(new BadRequestError('Введены некорректные данные'));
     } else {
       next(error);
     }
@@ -83,52 +86,36 @@ const createUser = async (req, res, next) => {
 };
 
 const updateProfile = async (req, res, next) => {
-  const { name, about } = req.body;
-  const ownerId = req.user._id;
-
   try {
+    const { name, about } = req.body;
+    const userId = req.user._id;
+
     const updatedUser = await User.findByIdAndUpdate(
-      ownerId,
+      userId,
       { name, about },
       { new: true, runValidators: true },
     );
 
-    if (!updatedUser) {
-      throw new NotFoundError('Пользователь с указанным _id не найден');
-    }
-
-    res.status(200).send(updatedUser);
+    res.send({ data: updatedUser });
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      next(new BadRequestError('Некорректные данные'));
-    } else {
-      next(error);
-    }
+    next(error);
   }
 };
 
 const updateAvatar = async (req, res, next) => {
-  const { avatar } = req.body;
-  const ownerId = req.user._id;
-
   try {
+    const { avatar } = req.body;
+    const userId = req.user._id;
+
     const updatedUser = await User.findByIdAndUpdate(
-      ownerId,
+      userId,
       { avatar },
       { new: true, runValidators: true },
     );
 
-    if (!updatedUser) {
-      throw new NotFoundError('Пользователь с указанным _id не найден');
-    }
-
-    res.status(200).send(updatedUser);
+    res.send({ data: updatedUser });
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      next(new BadRequestError('Некорректные данные'));
-    } else {
-      next(error);
-    }
+    next(error);
   }
 };
 
@@ -147,8 +134,8 @@ const login = (req, res, next) => {
       // вернём токен
       res.send({ token });
     })
-    .catch((err) => {
-      next(new UnauthorizedError(err.message));
+    .catch(() => {
+      next(new UnauthorizedError('Ошибка авторизации: неправильная почта или логин'));
     });
 };
 
